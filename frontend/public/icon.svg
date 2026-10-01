@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="RuralCare">
+  <rect width="128" height="128" rx="26" fill="#0f766e" />
+  <path
+    d="M56 30h16v26h26v16H72v26H56V72H30V56h26z"
+    fill="#ffffff"
+  />
+</svg>

@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Environment variables - never commit real secrets.
+# .env.example files ARE tracked on purpose.
+.env
+.env.*
+!.env.example
+
+# Build output
+dist/
+build/
+
+# Test coverage
+coverage/
+
+# Logs
+logs
+*.log
+
+# Editor and operating system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
