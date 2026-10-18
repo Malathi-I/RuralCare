@@ -1,4 +1,5 @@
 import HealthInformation from '../models/HealthInformation.js';
+import { safeContainsRegExp } from '../utils/schedule.js';
 
 /**
  * GET /api/health-information
@@ -11,7 +12,7 @@ export const listInformation = async (req, res, next) => {
 
     const filter = {};
     if (language) filter.language = language;
-    if (category) filter.category = new RegExp(category, 'i');
+    if (category) filter.category = safeContainsRegExp(category);
 
     const items = await HealthInformation.find(filter)
       .sort({ createdAt: -1 })

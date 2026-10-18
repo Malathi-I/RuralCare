@@ -15,7 +15,9 @@ import Home from './pages/Home.jsx';
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
 import Doctors from './pages/Doctors.jsx';
+import DoctorPublicProfile from './pages/DoctorProfile.jsx';
 import HealthcareCenters from './pages/HealthcareCenters.jsx';
+import CenterDetails from './pages/CenterDetails.jsx';
 import HealthInformation from './pages/HealthInformation.jsx';
 import NotFound from './pages/NotFound.jsx';
 
@@ -61,7 +63,7 @@ export default function App() {
               <Navbar />
               <OfflineBanner />
 
-              <main className="app-main">
+              <main className="app-main" id="main-content">
                 <Suspense fallback={<LoadingSpinner />}>
                   <Routes>
                     {/* Public pages */}
@@ -69,9 +71,16 @@ export default function App() {
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
                     <Route path="/doctors" element={<Doctors />} />
+                    // Public doctor profile (unique name: the doctor dashboard page is also
+// called DoctorProfile, so this import must not collide with it).
+<Route path="/doctors/:id" element={<DoctorPublicProfile />} />
                     <Route
                       path="/healthcare-centers"
                       element={<HealthcareCenters />}
+                    />
+                    <Route
+                      path="/healthcare-centers/:id"
+                      element={<CenterDetails />}
                     />
                     <Route
                       path="/health-information"

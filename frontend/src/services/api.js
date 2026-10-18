@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { AUTH_TOKEN_KEY } from '../utils/constants.js';
 
 /**
  * Central API client.
@@ -11,8 +12,12 @@ const api = axios.create({
 });
 
 // Attach the JWT to every request when the user is logged in.
+//
+// The token is read from localStorage on each request rather than cached in a
+// variable, so a newly stored token is always the one that gets sent and a
+// stale token can never be reused after a fresh login.
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('rc_token');
+  const token = localStorage.getItem(AUTH_TOKEN_KEY);
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }

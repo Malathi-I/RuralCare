@@ -1,5 +1,5 @@
 import Doctor from '../models/Doctor.js';
-import { isNotInPast, getToday, getDayName } from '../utils/schedule.js';
+import { isNotInPast, getToday, getDayName, safeContainsRegExp } from '../utils/schedule.js';
 
 /**
  * GET /api/doctors
@@ -12,8 +12,8 @@ export const listDoctors = async (req, res, next) => {
 
     const filter = {};
 
-    if (specialization) filter.specialization = new RegExp(specialization, 'i');
-    if (location) filter.location = new RegExp(location, 'i');
+    if (specialization) filter.specialization = safeContainsRegExp(specialization);
+    if (location) filter.location = safeContainsRegExp(location);
     if (available === 'true') filter.available = true;
 
     const doctors = await Doctor.find(filter).sort({ name: 1 });

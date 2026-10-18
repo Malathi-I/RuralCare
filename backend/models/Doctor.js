@@ -70,6 +70,30 @@ const doctorSchema = new mongoose.Schema(
       type: [availabilitySchema],
       default: [],
     },
+    // Optional professional profile details. All are optional so profiles
+    // created before this field existed keep working untouched.
+    experience: {
+      type: Number,
+      min: [0, 'Experience cannot be negative'],
+      max: [80, 'Please enter a realistic number of years'],
+      default: 0,
+    },
+    qualifications: {
+      type: String,
+      trim: true,
+      maxlength: [200, 'Qualifications must be at most 200 characters'],
+      default: '',
+    },
+    about: {
+      type: String,
+      trim: true,
+      maxlength: [600, 'About must be at most 600 characters'],
+      default: '',
+    },
+    languages: {
+      type: [String],
+      default: [],
+    },
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' },

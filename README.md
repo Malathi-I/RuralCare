@@ -254,8 +254,8 @@ delete for doctors, centers or articles. Those are admin-only by design.
   own appointments, and a doctor can only update appointments assigned to them.
 - Inputs are validated with `express-validator` before any database work.
 - CORS is restricted to the origins listed in `CLIENT_URL`.
-- A 404 handler and a global error handler return friendly messages; the stack
-  trace is included only when `NODE_ENV` is not `production`.
+- A 404 handler and a global error handler return friendly messages and never
+  expose stack traces; the full error is logged server-side for debugging.
 - Login failures return the same message whether or not the email exists, which
   prevents account enumeration.
 
@@ -422,34 +422,49 @@ Mongoose creates these automatically on first run.
 
 ### Creating the first admin
 
-The public register route only creates patients, which is the safe default. To
-create an admin, run this once from the `backend` folder using your Atlas URI:
+The public register route only creates patients, which is the safe default. The
+first admin account is created by the seed script that ships with this project -
+there is nothing to copy or paste.
 
-```js
-// backend/seed-admin.js
-import mongoose from 'mongoose';
-import 'dotenv/config';
-import User from './models/User.js';
+1. Create your MongoDB Atlas cluster and copy its connection string (see the
+   section above).
 
-await mongoose.connect(process.env.MONGODB_URI);
+2. Open `backend/.env` and set these values:
 
-const admin = await User.create({
-  name: 'System Admin',
-  email: 'admin@ruralcare.com',
-  password: 'change-this-password',
-  role: 'admin',
-});
+   | Variable          | What to put                                    |
+   | ----------------- | ---------------------------------------------- |
+   | `MONGODB_URI`     | your Atlas connection string                    |
+   | `JWT_SECRET`      | a long random string                            |
+   | `ADMIN_NAME`      | the display name for the admin                  |
+   | `ADMIN_EMAIL`     | the email the admin will log in with            |
+   | `ADMIN_PASSWORD`  | a real password, at least 8 characters          |
 
-console.log('Admin created:', admin.email);
-process.exit(0);
-```
+3. Create the admin:
 
 ```bash
+cd backend
 node seed-admin.js
 ```
 
-Then log in with those credentials and use **Admin Dashboard → Doctors** to
-create doctor accounts with their weekly availability.
+The script prints `Admin created successfully: <email>` on success. Two safety
+behaviours are built in: it refuses to run while `ADMIN_PASSWORD` is still the
+example placeholder, and if the email already exists it leaves that account
+untouched and exits successfully.
+
+The password is hashed by the existing `User` model bcrypt hook, so the plain
+text value is never written to the database. The script reads every value from
+the environment - no credential is hard-coded in the source.
+
+4. Start the application:
+
+```bash
+cd ..
+npm run dev
+```
+
+Then log in with the `ADMIN_EMAIL` and `ADMIN_PASSWORD` you set, and use
+**Admin Dashboard → Doctors** to create doctor accounts with their weekly
+availability.
 
 ## Running the Application
 

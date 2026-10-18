@@ -49,6 +49,32 @@ export const dayNameFromDate = (dateString) => {
 };
 
 /**
+ * Collapses exact duplicate working windows in a doctor's availability list.
+ *
+ * Availability is modelled as one working window per weekday, and existing
+ * records can contain the identical window twice. Every view renders the list
+ * as given, so the same hours would otherwise be shown on repeat. Only exact
+ * duplicates (same day, start and end) are removed - two genuinely different
+ * windows on the same day, such as a morning and an afternoon shift, are both
+ * kept. The stored record is never modified.
+ */
+export const uniqueAvailabilitySlots = (availability) => {
+  if (!Array.isArray(availability)) return [];
+
+  const seen = new Set();
+
+  return availability.filter((slot) => {
+    if (!slot) return false;
+
+    const key = `${slot.day}|${slot.startTime}|${slot.endTime}`;
+    if (seen.has(key)) return false;
+
+    seen.add(key);
+    return true;
+  });
+};
+
+/**
  * Builds the bookable time slots for a doctor on a given date,
  * in 30 minute steps, from the doctor's published working hours.
  */

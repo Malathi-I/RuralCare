@@ -5,7 +5,7 @@ import ErrorMessage from '../../components/ErrorMessage.jsx';
 import SuccessMessage from '../../components/SuccessMessage.jsx';
 
 export default function Profile() {
-  const { t } = useLanguage();
+  const { t, setLanguage } = useLanguage();
   const { user, updateProfile } = useAuth();
 
   const [form, setForm] = useState({
@@ -29,7 +29,12 @@ export default function Profile() {
 
     try {
       // Role and email are not part of the form and cannot be changed here.
-      await updateProfile(form);
+      const savedUser = await updateProfile(form);
+
+      // The preference is stored, so switch the whole UI to it right away.
+      // setLanguage also persists the choice, so it survives a page refresh.
+      setLanguage(savedUser?.preferredLanguage || form.preferredLanguage);
+
       setSuccess(t('message.saved'));
     } catch (requestError) {
       setError(requestError.userMessage);

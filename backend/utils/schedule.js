@@ -3,6 +3,22 @@
  * Keeping this logic in one place makes the appointment rules easy to explain.
  */
 
+/**
+ * Escapes a user supplied string so it can be safely used inside a RegExp.
+ *
+ * Without this, a search value such as "(a+)+" could be compiled into a
+ * catastrophic-backtracking pattern (a ReDoS vector) that locks up the API.
+ * Returns an empty string for non-string input so callers can always call it.
+ */
+export const escapeRegExp = (value) => {
+  if (typeof value !== 'string') return '';
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+};
+
+/** Builds a case-insensitive "contains" RegExp from raw user input. */
+export const safeContainsRegExp = (value) =>
+  new RegExp(escapeRegExp(String(value ?? '').trim()), 'i');
+
 const DAYS = [
   'Sunday',
   'Monday',

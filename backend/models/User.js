@@ -33,6 +33,13 @@ const userSchema = new mongoose.Schema(
       },
       default: 'patient',
     },
+    // Soft-delete / deactivation switch used by the admin user management.
+    // A deactivated account keeps its data and appointments but can no
+    // longer sign in, which is safer than a hard delete.
+    active: {
+      type: Boolean,
+      default: true,
+    },
     preferredLanguage: {
       type: String,
       enum: {
@@ -50,14 +57,17 @@ const userSchema = new mongoose.Schema(
 /**
  * Hash the password with bcrypt whenever it is set or changed.
  * This keeps plain-text passwords out of the database.
+ *
+ * Note: this hook is a promise-based (async) hook and must NOT declare a
+ * "next" parameter. Mongoose 9 no longer supplies "next" to async hooks,
+ * so mixing the two styles throws "next is not a function" on every save.
+ * Throwing is enough to abort the save and surface a real error.
  */
-userSchema.pre('save', async function hashPassword(next) {
-  if (!this.isModified('password')) return next();
+userSchema.pre('save', async function hashPassword() {
+  if (!this.isModified('password')) return;
 
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
-
-  return next();
 });
 
 /** Compare a plain-text password with the stored bcrypt hash. */

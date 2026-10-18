@@ -29,17 +29,37 @@ export const LanguageProvider = ({ children }) => {
 
   /**
    * Translates a dotted key such as "nav.home".
-   * Falls back to the key itself when a translation is missing,
-   * and to English when a whole language file is unavailable.
+   *
+   * Supports simple {placeholder} interpolation, for example
+   * t('doctor.resultCount', { count: 3 }) where the translation reads
+   * "Showing {count} of {total} doctors".
+   *
+   * Falls back to the key itself when a translation is missing, and to
+   * English when a whole language file is unavailable.
    */
-  const t = (key) => {
+  const t = (key, params) => {
     const dictionary = translations[language] || translations.en;
 
-    const value = key
+    let value = key
       .split('.')
       .reduce((current, part) => (current ? current[part] : undefined), dictionary);
 
-    return value ?? key;
+    // Fall back to English before giving up on the key entirely.
+    if (value === undefined && dictionary !== translations.en) {
+      value = key
+        .split('.')
+        .reduce(
+          (current, part) => (current ? current[part] : undefined),
+          translations.en
+        );
+    }
+
+    if (value === undefined) return key;
+    if (typeof value !== 'string' || !params) return value;
+
+    return value.replace(/\{(\w+)\}/g, (match, token) =>
+      params[token] !== undefined ? String(params[token]) : match
+    );
   };
 
   const value = { language, setLanguage: setLanguageState, t };

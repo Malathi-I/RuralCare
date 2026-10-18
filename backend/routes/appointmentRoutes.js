@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { body } from 'express-validator';
 import validate from '../middleware/validate.js';
-import { protect, requirePatient, requireDoctor } from '../middleware/auth.js';
+import { protect, requirePatient, requireDoctor, authorize } from '../middleware/auth.js';
 import {
   createAppointment,
   getMyAppointments,
@@ -34,6 +34,16 @@ router.get('/doctor', protect, requireDoctor, getDoctorAppointments);
 
 router.post('/', protect, requirePatient, createRules, validate, createAppointment);
 router.patch('/:id/cancel', protect, cancelAppointment);
-router.patch('/:id/status', protect, requireDoctor, statusRules, validate, updateAppointmentStatus);
+// Doctors and admins may both change an appointment status. "authorize" is used
+// instead of "requireDoctor" because the controller already handles the admin
+// case, which the single-role guard blocked before it could ever be reached.
+router.patch(
+  '/:id/status',
+  protect,
+  authorize('doctor', 'admin'),
+  statusRules,
+  validate,
+  updateAppointmentStatus
+);
 
 export default router;

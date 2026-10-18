@@ -3,6 +3,7 @@ import Doctor from '../models/Doctor.js';
 import HealthcareCenter from '../models/HealthcareCenter.js';
 import Appointment from '../models/Appointment.js';
 import HealthInformation from '../models/HealthInformation.js';
+import { safeContainsRegExp } from '../utils/schedule.js';
 
 /**
  * GET /api/admin/stats
@@ -59,8 +60,8 @@ export const getUsers = async (req, res, next) => {
     if (role) filter.role = role;
     if (search) {
       filter.$or = [
-        { name: new RegExp(search, 'i') },
-        { email: new RegExp(search, 'i') },
+        { name: safeContainsRegExp(search) },
+        { email: safeContainsRegExp(search) },
       ];
     }
 
@@ -105,9 +106,51 @@ export const updateUserRole = async (req, res, next) => {
 };
 
 /**
+ * PATCH /api/admin/users/:id/active
+ * Activates or deactivates a user account (the safe alternative to a hard
+ * delete: the account keeps its data but can no longer sign in). An admin
+ * cannot target their own account, so nobody can lock themselves out.
+ * Only the `active` flag is ever written - role, email and everything else
+ * are untouched, so there is no mass assignment.
+ */
+export const setUserActive = async (req, res, next) => {
+  try {
+    const { active } = req.body;
+
+    // The route validator already enforces a real boolean; this controller
+    // guard is a second net so a string like "false" can never coerce to true.
+    if (typeof active !== 'boolean') {
+      return res.status(400).json({ message: 'Active must be a boolean' });
+    }
+
+    if (req.params.id === req.user._id.toString()) {
+      return res
+        .status(400)
+        .json({ message: 'You cannot change your own account status' });
+    }
+
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    user.active = active;
+    await user.save();
+
+    return res.json({
+      user,
+      message: active ? 'Account activated' : 'Account deactivated',
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+/**
  * DELETE /api/admin/users/:id
- * Removes the user and, for doctors, the linked profile and appointments so
- * no document is left pointing at a deleted account.
+ * Removes the user, the linked doctor profile (when present) and the user's
+ * own appointments, so no document is left pointing at a deleted account.
  */
 export const deleteUser = async (req, res, next) => {
   try {
@@ -127,6 +170,10 @@ export const deleteUser = async (req, res, next) => {
       await Appointment.deleteMany({ doctor: doctor._id });
       await Doctor.deleteOne({ _id: doctor._id });
     }
+
+    // Remove this user's own appointments so none is left pointing at a
+    // deleted account - the same cascade the doctor branch above applies.
+    await Appointment.deleteMany({ patient: user._id });
 
     await User.deleteOne({ _id: user._id });
 

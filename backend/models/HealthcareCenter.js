@@ -27,6 +27,28 @@ const healthcareCenterSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
+    // Optional details that make the centre profile useful to a patient.
+    openingHours: {
+      type: String,
+      trim: true,
+      maxlength: [160, 'Opening hours must be at most 160 characters'],
+      default: '',
+    },
+    email: {
+      type: String,
+      trim: true,
+      lowercase: true,
+      default: '',
+    },
+    type: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    open: {
+      type: Boolean,
+      default: true,
+    },
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' },

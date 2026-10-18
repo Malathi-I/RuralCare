@@ -7,6 +7,7 @@ import {
   listAppointments,
   getUsers,
   updateUserRole,
+  setUserActive,
   deleteUser,
   listDoctors,
   createDoctor,
@@ -61,6 +62,12 @@ const roleRule = [
     .withMessage('Role must be patient, doctor or admin'),
 ];
 
+const activeRule = [
+  body('active')
+    .isBoolean({ strict: true })
+    .withMessage('Active must be a boolean'),
+];
+
 // Dashboard
 router.get('/stats', getStats);
 
@@ -70,6 +77,7 @@ router.get('/appointments', listAppointments);
 // Users
 router.get('/users', getUsers);
 router.patch('/users/:id/role', roleRule, validate, updateUserRole);
+router.patch('/users/:id/active', activeRule, validate, setUserActive);
 router.delete('/users/:id', deleteUser);
 
 // Doctors

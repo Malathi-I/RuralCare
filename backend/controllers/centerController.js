@@ -1,4 +1,5 @@
 import HealthcareCenter from '../models/HealthcareCenter.js';
+import { safeContainsRegExp } from '../utils/schedule.js';
 
 /**
  * GET /api/healthcare-centers
@@ -9,7 +10,7 @@ export const listCenters = async (req, res, next) => {
     const { location } = req.query;
 
     const filter = {};
-    if (location) filter.location = new RegExp(location, 'i');
+    if (location) filter.location = safeContainsRegExp(location);
 
     const centers = await HealthcareCenter.find(filter).sort({ name: 1 });
 

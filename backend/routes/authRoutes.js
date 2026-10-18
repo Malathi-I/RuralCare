@@ -3,6 +3,7 @@ import { body } from 'express-validator';
 import validate from '../middleware/validate.js';
 import { protect } from '../middleware/auth.js';
 import { register, login, getMe, updateProfile } from '../controllers/authController.js';
+import { loginLimiter, registerLimiter } from '../middleware/rateLimit.js';
 
 const router = Router();
 
@@ -45,8 +46,12 @@ const profileRules = [
 ];
 
 // Public
-router.post('/register', registerRules, validate, register);
-router.post('/login', loginRules, validate, login);
+//
+// The rate limiter sits in front of the validation chain so that repeated
+// attempts are counted even when the submitted details fail validation. The
+// login and register logic itself is untouched.
+router.post('/register', registerLimiter, registerRules, validate, register);
+router.post('/login', loginLimiter, loginRules, validate, login);
 
 // Private
 router.get('/me', protect, getMe);

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { LANGUAGES, useLanguage } from '../context/LanguageContext.jsx';
 import ErrorMessage from '../components/ErrorMessage.jsx';
+import PasswordField from '../components/PasswordField.jsx';
 
 const EMPTY_FORM = { name: '', email: '', password: '', preferredLanguage: 'en' };
 
@@ -76,20 +77,17 @@ export default function Register() {
           />
         </label>
 
-        <label className="field">
-          <span className="field__label">{t('auth.password')}</span>
-          <input
-            className="field__input"
-            type="password"
-            name="password"
-            value={form.password}
-            onChange={handleChange}
-            autoComplete="new-password"
-            required
-            minLength={6}
-          />
-          <span className="field__hint">{t('auth.passwordHint')}</span>
-        </label>
+        <PasswordField
+          id="register-password"
+          name="password"
+          value={form.password}
+          onChange={handleChange}
+          label={t('auth.password')}
+          hint={t('auth.passwordHint')}
+          autoComplete="new-password"
+          required
+          minLength={6}
+        />
 
         <label className="field">
           <span className="field__label">{t('auth.language')}</span>

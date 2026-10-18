@@ -3,6 +3,7 @@ import { getMyDoctorProfile } from '../../services/doctorService.js';
 import { useLanguage } from '../../context/LanguageContext.jsx';
 import LoadingSpinner from '../../components/LoadingSpinner.jsx';
 import ErrorMessage from '../../components/ErrorMessage.jsx';
+import { uniqueAvailabilitySlots } from '../../utils/format.js';
 
 export default function DoctorProfile() {
   const { t } = useLanguage();
@@ -66,11 +67,11 @@ export default function DoctorProfile() {
 
       <section className="stack">
         <h2 className="section-title">{t('doctor.availability')}</h2>
-        {doctor?.availability?.length > 0 ? (
+        {uniqueAvailabilitySlots(doctor?.availability).length > 0 ? (
           <div className="card">
             <ul className="slot-list">
-              {doctor.availability.map((slot, index) => (
-                <li key={`${slot.day}-${index}`}>
+              {uniqueAvailabilitySlots(doctor.availability).map((slot, index) => (
+                <li key={`${slot.day}-${slot.startTime}-${index}`}>
                   <strong>{slot.day}</strong> {slot.startTime} - {slot.endTime}
                 </li>
               ))}

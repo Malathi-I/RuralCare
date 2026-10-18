@@ -47,7 +47,7 @@ export default function AppointmentManagement() {
               className={`chip chip--button${filter === option ? ' chip--active' : ''}`}
               onClick={() => setFilter(option)}
             >
-              {option === 'all' ? t('common.all') : t(`appointment.${option}`)}
+              {option === 'all' ? t('common.all') : t(`dashboard.${option}`)}
             </button>
           ))}
         </div>

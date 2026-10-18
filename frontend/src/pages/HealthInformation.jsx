@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { getInformation } from '../services/infoService.js';
 import { LANGUAGES, useLanguage } from '../context/LanguageContext.jsx';
 import InfoCard from '../components/InfoCard.jsx';
-import LoadingSpinner from '../components/LoadingSpinner.jsx';
+import SkeletonList from '../components/SkeletonList.jsx';
 import ErrorMessage from '../components/ErrorMessage.jsx';
 import EmptyState from '../components/EmptyState.jsx';
+import PageHeader from '../components/PageHeader.jsx';
+import { ArticleModal } from './Home.jsx';
 
 export default function HealthInformation() {
   const { t, language } = useLanguage();
@@ -13,6 +15,8 @@ export default function HealthInformation() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selected, setSelected] = useState(null);
+  const [search, setSearch] = useState('');
+  const [category, setCategory] = useState('');
 
   const loadInformation = async () => {
     setLoading(true);
@@ -32,54 +36,114 @@ export default function HealthInformation() {
     loadInformation();
   }, []);
 
-  // Articles written in the interface language appear first.
-  const ordered = [...items].sort((a, b) => {
-    if (a.language === language && b.language !== language) return -1;
-    if (a.language !== language && b.language === language) return 1;
-    return 0;
-  });
+  // Categories come from the real articles, never hard coded.
+  const categories = useMemo(
+    () => [...new Set(items.map((item) => item.category).filter(Boolean))].sort(),
+    [items]
+  );
+
+  const visible = items
+    .filter((item) => {
+      if (category && item.category !== category) return false;
+
+      const query = search.trim().toLowerCase();
+      if (!query) return true;
+
+      return (
+        item.title.toLowerCase().includes(query) ||
+        item.content.toLowerCase().includes(query)
+      );
+    })
+    // Articles written in the interface language appear first.
+    .sort((a, b) => {
+      if (a.language === language && b.language !== language) return -1;
+      if (a.language !== language && b.language === language) return 1;
+      return 0;
+    });
+
+  const hasFilters = search.trim() || category;
 
   return (
     <div className="stack">
-      <h1 className="page-title">{t('info.title')}</h1>
+      <PageHeader title={t('info.title')} subtitle={t('info.subtitle')} />
+
+      <div className="toolbar">
+        <label className="field">
+          <span className="field__label">{t('common.search')}</span>
+          <input
+            className="field__input"
+            type="search"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder={t('info.searchPlaceholder')}
+          />
+        </label>
+
+        <label className="field">
+          <span className="field__label">{t('info.category')}</span>
+          <select
+            className="field__input"
+            value={category}
+            onChange={(event) => setCategory(event.target.value)}
+          >
+            <option value="">{t('info.allCategories')}</option>
+            {categories.map((item) => (
+              <option key={item} value={item}>
+                {item}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <div className="toolbar__row">
+          {hasFilters && (
+            <button
+              type="button"
+              className="btn btn--ghost btn--small"
+              onClick={() => {
+                setSearch('');
+                setCategory('');
+              }}
+            >
+              {t('common.clearFilters')}
+            </button>
+          )}
+        </div>
+
+        {!loading && (
+          <span className="toolbar__result">
+            {t('info.resultCount', { count: visible.length })}
+          </span>
+        )}
+      </div>
 
       <ErrorMessage message={error} onRetry={loadInformation} />
 
       {loading ? (
-        <LoadingSpinner />
-      ) : ordered.length === 0 ? (
-        <EmptyState message={t('info.noInfo')} />
+        <SkeletonList count={3} />
+      ) : items.length === 0 ? (
+        <EmptyState
+          icon="📄"
+          title={t('info.noInfoTitle')}
+          message={t('info.noInfoText')}
+        />
+      ) : visible.length === 0 ? (
+        <EmptyState
+          icon="🔍"
+          title={t('info.noMatchesTitle')}
+          message={t('info.noMatchesText')}
+          actionTo="/health-information"
+          actionLabel={t('common.clearFilters')}
+        />
       ) : (
         <div className="grid grid--3">
-          {ordered.map((item) => (
+          {visible.map((item) => (
             <InfoCard key={item._id} item={item} onRead={setSelected} />
           ))}
         </div>
       )}
 
-      {selected && (
-        <div
-          className="modal"
-          role="dialog"
-          aria-modal="true"
-          onClick={() => setSelected(null)}
-        >
-          <div className="modal__panel" onClick={(event) => event.stopPropagation()}>
-            <span className="chip chip--soft">{selected.category}</span>
-            <h2 className="modal__title">{selected.title}</h2>
-            <p className="modal__body">{selected.content}</p>
-            <div className="modal__footer">
-              <span className="chip chip--soft">
-                {LANGUAGES.find((item) => item.code === selected.language)?.label ||
-                  selected.language}
-              </span>
-              <button type="button" className="btn" onClick={() => setSelected(null)}>
-                {t('common.close')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ArticleModal article={selected} onClose={() => setSelected(null)} />
     </div>
   );
 }

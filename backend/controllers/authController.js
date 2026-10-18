@@ -72,6 +72,17 @@ export const login = async (req, res, next) => {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
+    // A deactivated account may still know the right password, but it must
+    // never receive a usable session. The check sits after the password
+    // comparison so the message cannot be used to probe which emails exist,
+    // and it reuses the exact status and wording the `protect` middleware
+    // returns, so every gate reports deactivation identically.
+    if (user.active === false) {
+      return res
+        .status(403)
+        .json({ message: 'This account has been deactivated. Please contact support.' });
+    }
+
     return res.json({
       user: toPublicUser(user),
       token: generateToken(user._id),

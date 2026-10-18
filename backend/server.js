@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import connectDB from './config/db.js';
 
 import authRoutes from './routes/authRoutes.js';
@@ -13,6 +14,10 @@ import adminRoutes from './routes/adminRoutes.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
+
+// Standard security headers (Helmet defaults) on every API response.
+// Placed first so all routes, including CORS preflights, carry them.
+app.use(helmet());
 
 const PORT = process.env.PORT || 5000;
 

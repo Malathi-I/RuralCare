@@ -7,6 +7,9 @@ export const getUsers = (params) => api.get('/admin/users', { params }).then((r)
 export const updateUserRole = (id, role) =>
   api.patch(`/admin/users/${id}/role`, { role }).then((r) => r.data);
 
+export const updateUserActive = (id, active) =>
+  api.patch(`/admin/users/${id}/active`, { active }).then((r) => r.data);
+
 export const getAdminAppointments = (params) =>
   api.get('/admin/appointments', { params }).then((r) => r.data);
 
